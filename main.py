@@ -77,12 +77,16 @@ def partialReview(index: int) -> bool:
             df['review_palate'][index],
             df['review_taste'][index]
         ]
+
     for review in p_review_list:  # iterate through each review value
         if review >= GOOD_REVIEW:  # if review greater or equal than parameter
             continue
         else:
             return False
     return True
+    '''Average equal to overall review
+    average = np.average(p_review_list)
+    return True if average == df['review_overall'][index] else False'''
 
 for index in range(n_of_indecies):  # iterate through indecies
     if df['review_overall'][index] == max_score:  # if review is max score
