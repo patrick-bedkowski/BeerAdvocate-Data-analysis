@@ -14,6 +14,7 @@ df = pd.read_csv('https://query.data.world/s/epkvquv6dgo5zi337wa2n23div4i3w')
 '''Get the index of a beer with highest abv'''
 
 max_abv_value = max(df["beer_abv"])
+# stores indecies of beer with maximum abv value
 max_abv_beers_indecies = [list(df["beer_abv"]).index(max_abv_value) for beer_abv in list(df["beer_abv"]) if beer_abv == max_abv_value]
 max_abv_beer_index = list(df["beer_abv"]).index(max_abv_value)
 
@@ -44,7 +45,7 @@ To answer this question, I will break down the solution into the following parts
 When you run the query:
 SELECT
 review_appearance, review_aroma, review_palate, review_taste, review_overall
-FROM beer_reviews where review_time=1235954167
+FROM beer_reviews WHERE review_time=1235954167
 
 You can see that the review of review_time=1235954167 has review_overall of 5.0,
 but all the partial reviews are in range 2.0-3.0. This indicates that in the dataset
