@@ -1,40 +1,42 @@
 import pandas as pd
 import numpy as np
+from pandas.core.frame import DataFrame
 from tabulate import tabulate
-from typing import List
+from plotter import plot_mean_abv
 
+if __name__ == '__main__':
 
-# get the dataset and create a data frame
-df = pd.read_csv('https://query.data.world/s/epkvquv6dgo5zi337wa2n23div4i3w')
-# df = pd.read_csv('beer_reviews.csv')  # for running locally
-df = df.dropna()  # delete rows that contain NULL value
+    # get the dataset and create a data frame
+    df = pd.read_csv('https://query.data.world/s/epkvquv6dgo5zi337wa2n23div4i3w')
+    # df = pd.read_csv('beer_reviews.csv')  # for running locally
+    df = df.dropna()  # delete rows that contain NULL value
 
-# ================================================== #
-# Which brewery produces the strongest beers by abv? #
-# ================================================== #
+    # ================================================== #
+    # Which brewery produces the strongest beers by abv? #
+    # ================================================== #
+        
+    # drop unnecessary columns
+    brewery_data = df.drop(columns=['review_time', 'review_overall', 'review_aroma', 'review_appearance', 'review_profilename', 'beer_style', 'review_palate', 'review_taste', 'beer_name'])
+    # rename column
+    brewery_data = brewery_data.rename(columns={'beer_beerid': 'beer_id'})
 
-# drop unnecessary columns
-brewery_data = df.drop(columns=['review_time', 'review_overall', 'review_aroma', 'review_appearance', 'review_profilename', 'beer_style', 'review_palate', 'review_taste', 'beer_name'])
-# rename column
-brewery_data = brewery_data.rename(columns={'beer_beerid': 'beer_id'})
+    # remove duplicates of beer's. Now there is single id of each beer
+    brewery_data = brewery_data.drop_duplicates(subset = 'beer_id')
 
-# remove duplicates of beer's. Now there is single id of each beer
-brewery_data = brewery_data.drop_duplicates(subset = 'beer_id')
+    # group data by brewery names and count how many beers does one brewery offer
+    brewery_beers = brewery_data.groupby('brewery_name').size().reset_index(name='count')
 
-# group data by brewery names and count how many beers does one brewery offer
-brewery_beers = brewery_data.groupby('brewery_name').size().reset_index(name='count')
+    # calculate mean of beers abv produced by each brewery
+    brewery_abv = brewery_data.groupby('brewery_name').mean().reset_index()
+    brewery_abv = brewery_abv.drop(columns=['brewery_id', 'beer_id'])
 
-# calculate mean of beers abv produced by each brewery
-brewery_abv = brewery_data.groupby('brewery_name').mean().reset_index()
-brewery_abv = brewery_abv.drop(columns=['brewery_id', 'beer_id'])
+    # merge dataframes so it contains: brewery name, mean abv, how many beers they produce
+    brewery_count_abv = brewery_beers.merge(brewery_abv, on="brewery_name", how = 'inner')
+    brewery_count_abv = brewery_count_abv.sort_values(by=['beer_abv'], ascending=False)  # sort values by beer abv mean
+    brewery_count_abv['beer_abv'] = brewery_count_abv['beer_abv'].round(decimals=2)  # round the abv values
+    brewery_count_abv = brewery_count_abv.set_index('brewery_name')
 
-# merge dataframes so it contains: brewery name, mean abv, how many beers they produce
-brewery_count_abv = brewery_beers.merge(brewery_abv, on="brewery_name", how = 'inner')
-brewery_count_abv = brewery_count_abv.sort_values(by=['beer_abv'], ascending=False)  # sort values by beer abv mean
-brewery_count_abv['beer_abv'] = brewery_count_abv['beer_abv'].round(decimals=2)  # round the abv values
-brewery_count_abv = brewery_count_abv.set_index('brewery_name')
-
-# plot_median_abv(brewery_count_abv)  # plot the data
+    # plot_mean_abv(brewery_count_abv)  # plot the data
 
 
 # =================================================== #
@@ -46,10 +48,17 @@ brewery_count_abv = brewery_count_abv.set_index('brewery_name')
 My solution regards recommending specific beers based on number of best overall reviews.
 
 To answer this question, I will break down the solution into the following parts:
-    1. Create a data stating how many times each beer have received maximum score.
-    Bypassing data from the database (*)
+    0. Bypasse false data from the database (*)
+    1. Create a data stating mean score of each beer
     2. Find 3 beers which have the most number of maximum overall reviews
     and are of different beer style
+
+To check the answer run query:
+SELECT
+beer_name, COUNT(review_time) as review_count, beer_style,
+AVG(review_appearance+review_aroma+review_palate+review_taste+review_overall)/5 as mean
+FROM beer_reviews GROUP BY beer_name HAVING review_count > <average_amount_of_beers_produced_by_brewery>
+ORDER BY mean DESC;
 
 (*) Found problems:
 When you run the query:
@@ -66,10 +75,10 @@ SELECT
 review_appearance, review_aroma, review_palate, review_taste, review_overall
 FROM beer_reviews WHERE review_appearance >=4 AND review_aroma>=4 AND review_palate>=4
 AND review_taste>=4 GROUP BY review_time
-HAVING AVG(review_appearance+review_aroma+review_palate+review_taste) >= 4
+HAVING AVG(review_appearance+review_aroma+review_palate+review_taste) == review_overall
 '''
-
-"""max_score = max(df['review_overall'])  # max score achieved by any beer
+"""
+max_score = max(df['review_overall'])  # max score achieved by any beer
 n_of_indecies = len(df.index)  # number of rows from dataframe
 
 n_of_beer_reviews = {}  # dict that holds how many times specific beer has received max score reviews and its style
