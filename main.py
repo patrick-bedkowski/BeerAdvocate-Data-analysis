@@ -3,28 +3,38 @@ import numpy as np
 from tabulate import tabulate
 from typing import List
 
+
 # get the dataset and create a data frame
 df = pd.read_csv('https://query.data.world/s/epkvquv6dgo5zi337wa2n23div4i3w')
 # df = pd.read_csv('beer_reviews.csv')  # for running locally
+df = df.dropna()  # delete rows that contain NULL value
 
 # ================================================== #
 # Which brewery produces the strongest beers by abv? #
 # ================================================== #
 
-'''Get the index of a beer with highest abv'''
+# drop unnecessary columns
+brewery_data = df.drop(columns=['review_time', 'review_overall', 'review_aroma', 'review_appearance', 'review_profilename', 'beer_style', 'review_palate', 'review_taste', 'beer_name'])
+# rename column
+brewery_data = brewery_data.rename(columns={'beer_beerid': 'beer_id'})
 
-max_abv_value = max(df["beer_abv"])
-# stores indecies of beer with maximum abv value
-max_abv_beers_indecies = [list(df["beer_abv"]).index(max_abv_value) for beer_abv in list(df["beer_abv"]) if beer_abv == max_abv_value]
-max_abv_beer_index = list(df["beer_abv"]).index(max_abv_value)
+# remove duplicates of beer's. Now there is single id of each beer
+brewery_data = brewery_data.drop_duplicates(subset = 'beer_id')
 
-if len(max_abv_beers_indecies) < 2:  # if there is only one beer with the highest abv
-    # print the name of the brewery that produces beer with highest abv
-    print(f'Beer with maximum abv is produced by brewery: \n\t> {df["brewery_name"][max_abv_beer_index]}')
-else:
-    print('Beers with maximum abv are produced by breweries:')
-    for index in max_abv_beers_indecies:
-        print(f'\t> {df["brewery_name"][index]}')
+# group data by brewery names and count how many beers does one brewery offer
+brewery_beers = brewery_data.groupby('brewery_name').size().reset_index(name='count')
+
+# calculate mean of beers abv produced by each brewery
+brewery_abv = brewery_data.groupby('brewery_name').mean().reset_index()
+brewery_abv = brewery_abv.drop(columns=['brewery_id', 'beer_id'])
+
+# merge dataframes so it contains: brewery name, mean abv, how many beers they produce
+brewery_count_abv = brewery_beers.merge(brewery_abv, on="brewery_name", how = 'inner')
+brewery_count_abv = brewery_count_abv.sort_values(by=['beer_abv'], ascending=False)  # sort values by beer abv mean
+brewery_count_abv['beer_abv'] = brewery_count_abv['beer_abv'].round(decimals=2)  # round the abv values
+brewery_count_abv = brewery_count_abv.set_index('brewery_name')
+
+# plot_median_abv(brewery_count_abv)  # plot the data
 
 
 # =================================================== #
@@ -59,7 +69,7 @@ AND review_taste>=4 GROUP BY review_time
 HAVING AVG(review_appearance+review_aroma+review_palate+review_taste) >= 4
 '''
 
-max_score = max(df['review_overall'])  # max score achieved by any beer
+"""max_score = max(df['review_overall'])  # max score achieved by any beer
 n_of_indecies = len(df.index)  # number of rows from dataframe
 
 n_of_beer_reviews = {}  # dict that holds how many times specific beer has received max score reviews and its style
@@ -117,3 +127,4 @@ for beer_name, [beer_score, beer_style] in n_of_beer_reviews.items():  # iterate
             best_beers.append([beer_name, beer_score, beer_style])
 
 print(tabulate(best_beers, tablefmt="fancy_grid", headers=["Rank", "Beer name", "Number of best reviews", 'Beer style'], showindex=[1,2,3]))
+"""

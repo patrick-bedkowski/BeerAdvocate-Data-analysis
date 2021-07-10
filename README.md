@@ -1,7 +1,38 @@
-# Recruitment tasks
+# Data analysis of a data set - BeerAdvocate
 
-1. Which brewery produces the strongest beers by abv ?
-2. If you had to pick 3 beers to recommend to someone, how would you approach the problem ?
+## Table of Contents
+
+1. [Tackled questions](#tackled-questions)
+    1. [Question 1](#question-1)
+    2. [Question 2](#question-2)
+2. [Worth noting](#worth-noting)
+
+## Tackled questions
+1. Which brewery produces the strongest beers by abv?
+2. If you had to pick 3 beers to recommend to someone, how would you approach the problem?
+
+### Question 1
+
+<h4><b>Which brewery produces the strongest beers by abv?</b></h4>
+
+<img src="images\breweries_abv_count.png" alt="breweries_abv_count"/>
+One can see that the <b><i>Schorschbräu</i></b> brewery has the highest average ratio of abv value in its beers. It also produces most number of beers among shown breweries.<br />
+On the other hand, one cannot simply choose other breweries that produce the strongest beers. See that next brewery with the highest average ratio of abv is <b><i>Shoes Brewery</i></b>, it only produces 1 beer.<br /><br />
+
+<h4><b>SQL Query verification</b></h4>
+To confirm the obtained results, one can run queries:<br /><br />
+
+- How many distinct beers does each brewery produce
+```
+SELECT COUNT ( DISTINCT beer_beerid ) FROM beer_reviews WHERE brewery_name="<BREWERY_NAME>" AND (brewery_id IS NOT NULL) AND (brewery_name IS NOT NULL) AND (review_time IS NOT NULL) AND (review_overall IS NOT NULL) AND (review_aroma IS NOT NULL) AND (review_appearance IS NOT NULL) AND (review_profilename IS NOT NULL) AND (beer_style IS NOT NULL) AND (review_palate IS NOT NULL) AND (review_taste IS NOT NULL) AND (beer_name IS NOT NULL) AND (beer_abv IS NOT NULL) AND (beer_beerid IS NOT NULL);
+```
+- Number of breweries
+```
+SELECT COUNT ( DISTINCT brewery_name ) FROM beer_reviews WHERE (brewery_id IS NOT NULL) AND (brewery_name IS NOT NULL) AND (review_time IS NOT NULL) AND (review_overall IS NOT NULL) AND (review_aroma IS NOT NULL) AND (review_appearance IS NOT NULL) AND
+(review_profilename IS NOT NULL) AND (beer_style IS NOT NULL) AND (review_palate IS NOT NULL) AND (review_taste IS NOT NULL) AND (beer_name IS NOT NULL) AND (beer_abv IS NOT NULL) AND (beer_beerid IS NOT NULL);
+```
+
+### Question 2
 
 To answer question 2. I will break down the solution into the following parts:
 1. Create a data stating how many times each beer have received __maximum overall score__. __Bypassing false__ data from the database (*),
@@ -25,5 +56,9 @@ AND review_taste>=4 GROUP BY review_time
 HAVING AVG(review_appearance + review_aroma + review_palate + review_taste) >= 4
 ```
 
-## Solution
-<img src="exercise_2.png" alt="exercise_2"/>
+### Solution
+<img src="images\exercise_2.png" alt="exercise_2"/>
+
+## Worth noting
+
+I. There might be corrupted data where a brewery with the same name is identified by different brewery_id
