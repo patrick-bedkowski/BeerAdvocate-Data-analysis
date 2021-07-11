@@ -2,29 +2,46 @@ import pandas as pd
 import numpy as np
 from pandas.core.frame import DataFrame
 from tabulate import tabulate
-from plotter import plot_mean_abv
+from plotter import plot_mean_abv, plot_distribution_abv
+
+def distribution_abv():
+    df = pd.read_csv('beer_reviews.csv')  # for running locally
+    df = df.dropna()  # delete rows that contain NULL value
+
+    # drop unnecessary columns
+    brewery_data = df.drop(columns=['review_time', 'review_overall', 'review_aroma', 'review_appearance', 'review_profilename', 'beer_style', 'review_palate', 'review_taste', 'beer_beerid', 'brewery_id', 'brewery_name'])
+
+    # drop beer duplicates
+    
+    brewery_data = brewery_data.drop_duplicates(subset = 'beer_name')
+    
+    # plot abv distribution
+    # plot_distribution_abv(brewery_data)
 
 if __name__ == '__main__':
 
     # get the dataset and create a data frame
     df = pd.read_csv('https://query.data.world/s/epkvquv6dgo5zi337wa2n23div4i3w')
-    # df = pd.read_csv('beer_reviews.csv')  # for running locally
+    #df = pd.read_csv('beer_reviews.csv')  # for running locally
     df = df.dropna()  # delete rows that contain NULL value
 
     # ================================================== #
     # Which brewery produces the strongest beers by abv? #
     # ================================================== #
-        
+    
     # drop unnecessary columns
     brewery_data = df.drop(columns=['review_time', 'review_overall', 'review_aroma', 'review_appearance', 'review_profilename', 'beer_style', 'review_palate', 'review_taste', 'beer_name'])
     # rename column
     brewery_data = brewery_data.rename(columns={'beer_beerid': 'beer_id'})
-
+    
     # remove duplicates of beer's. Now there is single id of each beer
     brewery_data = brewery_data.drop_duplicates(subset = 'beer_id')
 
     # group data by brewery names and count how many beers does one brewery offer
     brewery_beers = brewery_data.groupby('brewery_name').size().reset_index(name='count')
+
+    # what is the median mean of how may beers brevery produces?
+    print(f'Median of beers produced by brevery is: {np.median(list(brewery_beers["count"]))}')
 
     # calculate mean of beers abv produced by each brewery
     brewery_abv = brewery_data.groupby('brewery_name').mean().reset_index()
@@ -36,6 +53,10 @@ if __name__ == '__main__':
     brewery_count_abv['beer_abv'] = brewery_count_abv['beer_abv'].round(decimals=2)  # round the abv values
     brewery_count_abv = brewery_count_abv.set_index('brewery_name')
 
+    # Filter breweries that produce more than 3 beers  
+    brewery_count_abv = brewery_count_abv[(brewery_count_abv['count'] >= 4)]
+
+    print(brewery_count_abv.head(10))
     # plot_mean_abv(brewery_count_abv)  # plot the data
 
 
