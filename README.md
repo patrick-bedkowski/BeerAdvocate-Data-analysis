@@ -28,11 +28,11 @@ Firstly, 68'136 rows in the dataset contain at least one NULL value. That's ~ 4.
 
 <h4><b>Which brewery produces the strongest beers by abv?</b></h4>
 
-To answer this question, we need to answer some questions that might direct us towards the answer. Let's plot a bar graph of abv value distribution among all beers.
+To answer this question, we need to answer some questions that might direct us towards the answer. Let's plot a bar plot of abv value distribution among all beers.
 
 <img src="images\abv_distribution.png" alt="breweries_abv_count"/>
 
-One can see that the vast majority of beers have less than 10% abv. Furthermore, beers that have 20% or more abv are not visible on the graph.
+One can see that the vast majority of beers have less than 10% abv. Furthermore, beers that have 20% or more abv are not visible on the plot.
 From the following QUERY, one can find out that there are only <b>18</b> of these beers!
 
 ```
@@ -76,15 +76,25 @@ SELECT COUNT ( DISTINCT brewery_name ) FROM beer_reviews WHERE (brewery_id IS NO
 
 ### Question 2
 
-Update incomming
 
 <br />
 
 <h4><b>If you had to pick 3 beers to recommend to someone, how would you approach the problem?</b></h4><br />
 
-To answer question 2. I will break down the solution into the following parts:
+Since this database contains over a million reviews from 32'908 users, it might be hard to approach this problem with traditional way. I am going to use matrix factorization. To apply this method, I need to filter reviewers that have posted little reviews.
+
+See that most users posted less that 10 reviews.
+
+<img src="images\reviews_number.png" alt="number_of_reviews"/>
+
+I will break down the solution into the following parts:
 1. Create a data stating how many times each beer have received __maximum overall score__. __Bypassing false__ data from the database (*),
 2. Find 3 beers which __have the most number of maximum overall reviews__ and __are of different beer style__.
+
+### Solution
+<img src="images\exercise_2.png" alt="exercise_2"/>
+
+<br /><br />
 
 (*) Found problems:
 When the following query is run:
@@ -104,8 +114,7 @@ AND review_taste>=4 GROUP BY review_time
 HAVING AVG(review_appearance + review_aroma + review_palate + review_taste) >= 4
 ```
 
-### Solution
-<img src="images\exercise_2.png" alt="exercise_2"/>
+<br />
 
 ## Worth noting
 

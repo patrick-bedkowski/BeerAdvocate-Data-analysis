@@ -1,13 +1,10 @@
 import pandas as pd
 import numpy as np
 from pandas.core.frame import DataFrame
-from tabulate import tabulate
-from plotter import plot_mean_abv, plot_distribution_abv
+from torch.utils.data.dataset import random_split
+from plotter import plot_mean_abv, plot_distribution_abv, plot_reviews_number
 
-def distribution_abv():
-    df = pd.read_csv('beer_reviews.csv')  # for running locally
-    df = df.dropna()  # delete rows that contain NULL value
-
+def distribution_abv(df: pd.DataFrame) -> None:
     # drop unnecessary columns
     brewery_data = df.drop(columns=['review_time', 'review_overall', 'review_aroma', 'review_appearance', 'review_profilename', 'beer_style', 'review_palate', 'review_taste', 'beer_beerid', 'brewery_id', 'brewery_name'])
 
@@ -18,17 +15,11 @@ def distribution_abv():
     # plot abv distribution
     # plot_distribution_abv(brewery_data)
 
-if __name__ == '__main__':
-
-    # get the dataset and create a data frame
-    df = pd.read_csv('https://query.data.world/s/epkvquv6dgo5zi337wa2n23div4i3w')
-    #df = pd.read_csv('beer_reviews.csv')  # for running locally
-    df = df.dropna()  # delete rows that contain NULL value
-
+def task_1(df: pd.DataFrame) -> None:
     # ================================================== #
     # Which brewery produces the strongest beers by abv? #
     # ================================================== #
-    
+
     # drop unnecessary columns
     brewery_data = df.drop(columns=['review_time', 'review_overall', 'review_aroma', 'review_appearance', 'review_profilename', 'beer_style', 'review_palate', 'review_taste', 'beer_name'])
     # rename column
@@ -59,102 +50,127 @@ if __name__ == '__main__':
     print(brewery_count_abv.head(10))
     # plot_mean_abv(brewery_count_abv)  # plot the data
 
-
-# =================================================== #
-# If you had to pick 3 beers to recommend to someone, #
-# how would you approach the problem?                 #
-# =================================================== #
-
 '''
-My solution regards recommending specific beers based on number of best overall reviews.
+def task_2(df: pd.DataFrame) -> None:
 
-To answer this question, I will break down the solution into the following parts:
-    0. Bypasse false data from the database (*)
-    1. Create a data stating mean score of each beer
-    2. Find 3 beers which have the most number of maximum overall reviews
-    and are of different beer style
+    # drop unnecessary columns
+    reviews_df = df.drop(columns=['review_time', 'review_overall', 'review_aroma', 'review_appearance', 'beer_style', 'review_palate', 'review_taste', 'beer_name', 'brewery_name', 'beer_abv', 'beer_beerid', 'brewery_id'])
 
-To check the answer run query:
-SELECT
-beer_name, COUNT(review_time) as review_count, beer_style,
-AVG(review_appearance+review_aroma+review_palate+review_taste+review_overall)/5 as mean
-FROM beer_reviews GROUP BY beer_name HAVING review_count > <average_amount_of_beers_produced_by_brewery>
-ORDER BY mean DESC;
+    # how many reviews does each user posted
+    reviews_df = reviews_df.groupby('review_profilename').size().reset_index(name='n_of_reviews')
 
-(*) Found problems:
-When you run the query:
-SELECT
-review_appearance, review_aroma, review_palate, review_taste, review_overall
-FROM beer_reviews WHERE review_time=1235954167
+    # group each review number with number of reviewers
+    reviews_df = reviews_df.groupby('n_of_reviews').size().reset_index(name='group_reviews')
 
-You can see that the review of review_time=1235954167 has review_overall of 5.0,
-but all the partial reviews are in range 2.0-3.0. This indicates that in the dataset
-there is some false data.
+    print(reviews_df.head())
+    # plot_reviews_number(reviews_df)
 
-To eliminate the false data you can run the query:
-SELECT
-review_appearance, review_aroma, review_palate, review_taste, review_overall
-FROM beer_reviews WHERE review_appearance >=4 AND review_aroma>=4 AND review_palate>=4
-AND review_taste>=4 GROUP BY review_time
-HAVING AVG(review_appearance+review_aroma+review_palate+review_taste) == review_overall
-'''
-"""
-max_score = max(df['review_overall'])  # max score achieved by any beer
-n_of_indecies = len(df.index)  # number of rows from dataframe
+def reccommend() -> pd.DataFrame:
+    df = pd.read_csv('beer_reviews.csv')  # for running locally
+    df = df.dropna()  # delete rows that contain NULL value
 
-n_of_beer_reviews = {}  # dict that holds how many times specific beer has received max score reviews and its style
-GOOD_REVIEW = 4.0  # parameter that indicates if review is considered good 
-# The results heavly depends on this parameter 
+    # drop unnecessary columns
+    ratings_df = df.drop(columns=['review_time', 'review_aroma', 'review_appearance', 'beer_style', 'review_palate', 'review_taste', 'beer_name', 'brewery_name', 'beer_abv', 'brewery_id'])
+    
+    ratings_df['user_id'] = ratings_df.groupby('review_profilename').ngroup()
+    # sorted
+    ratings_df = ratings_df.sort_values(by=['user_id'], ascending=True)
 
-def partialReview(index: int) -> bool:
+    # drop profilename
+    ratings_df = ratings_df.drop(columns=['review_profilename'])
+
+    # rename column
+    ratings_df = ratings_df.rename(columns={'beer_beerid': 'beer_id', 'review_overall': 'rating'})
+    
+    user_ratings = ratings_df.pivot_table(index=['user_id'],columns=['beer_id'],values='rating')
+    print(user_ratings.head())'''
+
+
+def task_2(df: pd.DataFrame) -> None:
+
+    # =================================================== #
+    # If you had to pick 3 beers to recommend to someone, #
+    # how would you approach the problem?                 #
+    # =================================================== #
+
     '''
-    Returns TRUE, if all partial reviews of specific index are greater than 
-    constant value. Otherwises, returns False. 
+    My solution regards recommending specific beers based on number of best overall reviews.
+
+    To answer this question, I will break down the solution into the following parts:
+        0. Bypasse false data from the database (*)
+        1. Create a data stating mean score of each beer
+        2. Find 3 beers which have the most number of maximum overall reviews
+        and are of different beer style
+
     '''
-    # create partial reviews list
-    p_review_list =  [
-            df['review_appearance'][index],
-            df['review_aroma'][index],
-            df['review_palate'][index],
-            df['review_taste'][index]
-        ]
 
-    for review in p_review_list:  # iterate through each review value
-        if review >= GOOD_REVIEW:  # if review greater or equal than parameter
-            continue
-        else:
-            return False
-    return True
-    '''Average equal to overall review
-    average = np.average(p_review_list)
-    return True if average == df['review_overall'][index] else False'''
+    max_score = max(df['review_overall'])  # max score achieved by any beer
+    n_of_indecies = len(df.index)  # number of rows from dataframe
 
-for index in range(n_of_indecies):  # iterate through indecies
-    if df['review_overall'][index] == max_score:  # if review is max score
-        # (*) Filter the false data here
-        if partialReview(index):  # if every partial review is greater than parameter 
-            beer_name = df['beer_name'][index]
-            beer_style = df['beer_style'][index]
-            if beer_name not in n_of_beer_reviews.keys():  # if beer name not in dictionary
-                n_of_beer_reviews[beer_name] = [1, beer_style]
+    n_of_beer_reviews = {}  # dict that holds how many times specific beer has received max score reviews and its style
+    GOOD_REVIEW = 4.0  # parameter that indicates if review is considered good 
+    # The results heavly depends on this parameter 
+
+    def partialReview(index: int) -> bool:
+        '''
+        Returns TRUE, if all partial reviews of specific index are greater than 
+        constant value. Otherwises, returns False. 
+        '''
+        # create partial reviews list
+        p_review_list =  [
+                df['review_appearance'][index],
+                df['review_aroma'][index],
+                df['review_palate'][index],
+                df['review_taste'][index]
+            ]
+
+        for review in p_review_list:  # iterate through each review value
+            if review >= GOOD_REVIEW:  # if review greater or equal than parameter
+                continue
             else:
-                n_of_beer_reviews[beer_name][0] += 1  # increase number of max score reviews
+                return False
+        return True
+        '''Average equal to overall review
+        average = np.average(p_review_list)
+        return True if average == df['review_overall'][index] else False'''
+
+    for index in range(n_of_indecies):  # iterate through indecies
+        if df['review_overall'][index] == max_score:  # if review is max score
+            # (*) Filter the false data here
+            if partialReview(index):  # if every partial review is greater than parameter 
+                beer_name = df['beer_name'][index]
+                beer_style = df['beer_style'][index]
+                if beer_name not in n_of_beer_reviews.keys():  # if beer name not in dictionary
+                    n_of_beer_reviews[beer_name] = [1, beer_style]
+                else:
+                    n_of_beer_reviews[beer_name][0] += 1  # increase number of max score reviews
+            else:
+                continue
+
+    # sort a dictionary by descending value using lambda function
+    n_of_beer_reviews = {k: v for k, v in sorted(n_of_beer_reviews.items(), key=lambda item: item[1], reverse=True)}
+
+    best_beers = [] # best beers data
+    for beer_name, [beer_score, beer_style] in n_of_beer_reviews.items():  # iterate through dictionary
+        if len(best_beers) == 3:
+            break
         else:
-            continue
+            beer_styles = (beer_data[2] for beer_data in best_beers)
+            if beer_style in beer_styles: # if there is a beer with the same style
+                continue
+            else:
+                best_beers.append([beer_name, beer_score, beer_style])
 
-# sort a dictionary by descending value using lambda function
-n_of_beer_reviews = {k: v for k, v in sorted(n_of_beer_reviews.items(), key=lambda item: item[1], reverse=True)}
+    # print(tabulate(best_beers, tablefmt="fancy_grid", headers=["Rank", "Beer name", "Number of best reviews", 'Beer style'], showindex=[1,2,3]))
 
-best_beers = [] # best beers data
-for beer_name, [beer_score, beer_style] in n_of_beer_reviews.items():  # iterate through dictionary
-    if len(best_beers) == 3:
-        break
-    else:
-        beer_styles = (beer_data[2] for beer_data in best_beers)
-        if beer_style in beer_styles: # if there is a beer with the same style
-            continue
-        else:
-            best_beers.append([beer_name, beer_score, beer_style])
 
-print(tabulate(best_beers, tablefmt="fancy_grid", headers=["Rank", "Beer name", "Number of best reviews", 'Beer style'], showindex=[1,2,3]))
-"""
+if __name__ == '__main__':
+
+    # get the dataset and create a data frame
+    df = pd.read_csv('https://query.data.world/s/epkvquv6dgo5zi337wa2n23div4i3w')
+    #df = pd.read_csv('beer_reviews.csv')  # for running locally
+    df = df.dropna()  # delete rows that contain NULL value
+
+    # task_1(df)
+    # distribution_abv(df)
+    task_2(df)

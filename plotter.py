@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.ticker import PercentFormatter
+from matplotlib.ticker import PercentFormatter, ScalarFormatter
 
 # https://matplotlib.org/stable/gallery/lines_bars_and_markers/bar_label_demo.html
 
@@ -70,3 +70,24 @@ def plot_distribution_abv(brewery_data: pd.DataFrame) -> None:
     plt.box(False)  # borderless
 
     plt.savefig("abv_distribution.png", dpi=100, bbox_inches='tight')
+
+def plot_reviews_number(reviews_data: pd.DataFrame) -> None:
+    reviews_count = list(reviews_data['group_reviews'])
+    n_of_reviews = list(reviews_data['n_of_reviews'])
+    
+    fig, ax = plt.subplots(figsize=(16,10))
+    # plt.bar(n_of_reviews, reviews_count,width=0.5)
+    # wdh = [0.5*(10**x) for x in range(0,len(reviews_count))]
+    ax.plot(n_of_reviews, reviews_count, 'o')
+
+    ax.set_xscale('log')
+    ax.get_xaxis().set_major_formatter(ScalarFormatter())
+    
+    ax.set_xlabel('Number of reviews')
+    ax.set_ylabel('Number of reviewers')
+
+    plt.grid(color='grey', linestyle='-', linewidth=0.25)
+
+    plt.box(False)  # borderless
+
+    plt.savefig("reviews_number.png", dpi=100, bbox_inches='tight')
