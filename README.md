@@ -28,7 +28,7 @@ Firstly, 68'136 rows in the dataset contain at least one NULL value. That's ~ 4.
 
 <h4><b>Which brewery produces the strongest beers by abv?</b></h4>
 
-To answer this question, we need to answer some questions that might direct us towards the answer. Let's plot a bar plot of abv value distribution among all beers.
+To find an answer to this question, lets begin with looking at a bar plot of abv value distribution among all available beers.
 
 <img src="images\abv_distribution.png" alt="breweries_abv_count"/>
 
@@ -43,10 +43,12 @@ It might not be clear how to answer question of which brewery produces the stron
 
 <img src="images\breweries_abv_count.png" alt="breweries_abv_count"/>
 
-One can see that the <b><i>Schorschbräu</i></b> brewery has the highest average ratio of abv value among its beers. It also produces most number of beers among shown breweries.<br />
+One can see that the <b><i>Schorschbräu</i></b> brewery has the highest average of abv values among its beers. It also produces most number of beers among shown breweries.<br />
 On the other hand, one cannot simply choose other breweries that produce the strongest beers, because some of them produce only 1 beer. See that next brewery with the highest average ratio of abv is <b><i>Shoes Brewery</i></b>, it only produces 1 beer.
 
-The next step that could lead us to the answer might be looking at the median of beers produced by breweries. It is 4, because of that it seems resonable to choose only these breweries that produce more or equal to 4 beers. 
+The next step that could lead us to the answer might be looking at the median of beers produced by breweries. It is 4, because of that it seems resonable to choose only these breweries that produce more or equal to <b>4</b> beers. 
+
+Let's create the same plot bar again, but taking into account the previous assumption.
 
 <img src="images\breweries_abv_count_mean.png" alt="breweries_abv_count_mean"/>
 
